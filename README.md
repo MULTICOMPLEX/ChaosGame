@@ -4,4 +4,4 @@
 
 ![Chaos_Game](https://user-images.githubusercontent.com/75379917/175657795-aad3502a-f61f-4f3a-88a2-4961bad96192.png)
 
-![Chaos_Game](https://user-images.githubusercontent.com/75379917/175778316-cbe8f81c-12b7-4b1d-9de3-4bbd46647a0f.png)
+![Chaos_Game](https://user-images.githubusercontent.com/75379917/175783249-ec36f7df-94d7-4183-97fc-52edb44b9e98.png)
