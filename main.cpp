@@ -51,6 +51,22 @@ std::vector<Pixel> setcorners_square(const T& WIDTH, const T& HEIGHT) {
 }
 
 template <typename T>
+std::vector<Pixel> Vicsek_fractal(const T& WIDTH, const T& HEIGHT) {
+	std::vector<Pixel> pix(5);
+	pix[0].x = 0;
+	pix[0].y = 0;
+	pix[1].x = WIDTH;
+	pix[1].y = 0;
+	pix[2].x = 0;
+	pix[2].y = HEIGHT;
+	pix[3].x = WIDTH;
+	pix[3].y = HEIGHT;
+	pix[4].x = WIDTH / 2;
+	pix[4].y = HEIGHT / 2;
+	return pix;
+}
+
+template <typename T>
 std::vector<Pixel> setcorners_ngon(const T& vertices, const T& WIDTH, const T& HEIGHT) {
 
 	return polygonPoints(vertices, WIDTH, HEIGHT);
@@ -88,6 +104,8 @@ int main(int argc, char* argv[])
 		pix = setcorners_square(WIDTH, HEIGHT);
 	else if (fractal_select == 2)
 		pix = setcorners_ngon(5, WIDTH, HEIGHT);
+	else if (fractal_select == 3)
+		pix = Vicsek_fractal(WIDTH, HEIGHT);
 
 	int choice = 0, choice2 = 0;
 
@@ -99,7 +117,10 @@ int main(int argc, char* argv[])
 		if (fractal_select == 0)
 			choice = RNG(2);
 
-		else  {
+		else if (fractal_select == 3) 
+			choice = RNG(int(pix.size() - 1));
+
+		else {
 			while (choice2 == choice)
 				choice = RNG(int(pix.size() - 1));
 		}
@@ -108,10 +129,15 @@ int main(int argc, char* argv[])
 
 		auto dx = pix[choice].x - last.x;
 		auto dy = pix[choice].y - last.y;
-
-		point.x = int(round(last.x + dx / 2));
-		point.y = int(round(last.y + dy / 2));
-
+		if (fractal_select == 3) {
+			point.x = int(round(last.x + dx * (2./3)));
+			point.y = int(round(last.y + dy * (2./3)));
+		}
+		else 
+		{
+			point.x = int(round(last.x + dx / 2));
+			point.y = int(round(last.y + dy / 2));
+		}
 		last = point;
 
 	}
