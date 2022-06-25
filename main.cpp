@@ -1,13 +1,8 @@
 
-#include <iostream>
-#include <numbers>
-#include <vector>
-#include "mxws.hpp"
-#include "surface.hpp"
-#include "lodepng.h"
+#include "nebulabrot.hpp"
 
-constexpr auto WIDTH = 1000;
-constexpr auto HEIGHT = 900;
+constexpr auto WIDTH = 500;//1000;
+constexpr auto HEIGHT = 500;//900;
 
 mxws<uint32_t> RNG;
 
@@ -39,7 +34,7 @@ std::vector<Pixel> setcorners_triangle(const T& WIDTH, const T& HEIGHT) {
 	return pix;
 }
 
-constexpr auto ITER = 1000000;
+constexpr auto ITER = 100;
 
 std::vector<unsigned char> image((WIDTH + 1)* (HEIGHT + 1) * 4);
 template <typename im, typename I, typename col>
@@ -49,6 +44,12 @@ void encodeOneStep(const char* filename, const std::vector<unsigned char>& image
 
 int main(int argc, char* argv[])
 {
+
+	//Buddhabrot buddhabrot(WIDTH, HEIGHT);
+	//buddhabrot.gen_fractal();
+	//encodeOneStep("Buddhabrot.png", buddhabrot.image, WIDTH, HEIGHT);
+  ///Test_Buddhabrot();
+  ///return 0;
 
 	Surface surf(WIDTH, HEIGHT);
 	Color color;
@@ -68,7 +69,7 @@ int main(int argc, char* argv[])
 	int choice = 0, choice2 = 0;
 	for (auto i = 0; i < ITER; i++) {
 
-		surf.RectFill(point.x, point.y, 1, 1, color);
+		//surf.RectFill(point.x, point.y, 1, 1, color);
 		putpixel(image, point.x, point.y, color);
 
 		if (square) {
@@ -90,7 +91,7 @@ int main(int argc, char* argv[])
 
 	}
 
-	surf.Save("Chaos_Game.bmp");
+	//surf.Save("Chaos_Game.bmp");
 	encodeOneStep("Chaos_Game.png", image, WIDTH, HEIGHT);
 
 	return 0;
