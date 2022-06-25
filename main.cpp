@@ -9,16 +9,17 @@ mxws<uint32_t> RNG;
 std::vector<Pixel> pix;
 
 template <typename T>
-std::vector<Pixel> polygonPoints(int vertices, const T& WIDTH, const T& HEIGHT) {
+std::vector<Pixel> polygonPoints(int numPoints, const T& WIDTH, const T& HEIGHT) {
 	std::vector<Pixel> coordinates;
 	int radius = HEIGHT / 2;
-	for (int i = 0; i < vertices; i++)
+	double theta = -1.5 * (((numPoints - 2) * std::numbers::pi) / numPoints);
+	int centerX = WIDTH / 2;
+	int centerY = HEIGHT / 2;
+	for (int i = 0; i < numPoints; i++)
 	{
-		double angle = (2 * std::numbers::pi) / vertices;
-		double a = (angle * i);
-		int centerX = WIDTH / 2;
-		int centerY = HEIGHT / 2;
-		coordinates.push_back({ int(centerX + radius * sin(a)),int(centerY + radius * cos(a)) });
+		auto X = radius * cos(2 * std::numbers::pi * i / numPoints + theta) + centerX;
+		auto Y = radius * sin(2 * std::numbers::pi * i / numPoints + theta) + centerY;
+		coordinates.push_back({ int(X),int(Y) });
 	}
 	return coordinates;
 }
