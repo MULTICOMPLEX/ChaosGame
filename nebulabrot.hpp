@@ -137,7 +137,6 @@ namespace {
   constexpr TargetProperties target = target1;
   constexpr BitmapProperties bitmap = { 4096, 4096 };
 
-  //convert color.ppm -normalize -level 0,90% -gamma 0.3 -scale 800x800 nebulabrot.jpg
   constexpr int max_orbit_length = 50000;
 
   mxws<uint32_t> prng;
@@ -223,36 +222,50 @@ namespace {
 
   void OutputPPM(const char* fname, ImageReal max0, ImageReal max1, ImageReal max2)
   {
-    FILE* fp = fopen(fname, "wb");
-    assert(fp != nullptr);
-    fprintf(fp, "P6\n%d %d\n255\n", bitmap.width, bitmap.height);
-    for (int y = 0; y < bitmap.height; ++y) {
-      for (int x = 0; x < bitmap.width; ++x) {
-        unsigned char rgb[3] = {
-            GainCorrect(image_buffer[0][y][x] / max0),
-            GainCorrect(image_buffer[1][y][x] / max1),
-            GainCorrect(image_buffer[2][y][x] / max2),
-        };
-        fwrite(rgb, 1, 3, fp);
+    FILE* fp = {};
+    errno_t err;
+    err = fopen_s(&fp, fname, "wb");
+    if (err == 0) {
+      fprintf(fp, "P6\n%d %d\n255\n", bitmap.width, bitmap.height);
+      for (int y = 0; y < bitmap.height; ++y) {
+        for (int x = 0; x < bitmap.width; ++x) {
+          unsigned char rgb[3] = {
+              GainCorrect(image_buffer[0][y][x] / max0),
+              GainCorrect(image_buffer[1][y][x] / max1),
+              GainCorrect(image_buffer[2][y][x] / max2),
+          };
+          fwrite(rgb, 1, 3, fp);
+        }
       }
+      fclose(fp);
     }
-    fclose(fp);
+    else
+    {
+      printf("The file was not opened\n");
+    }
   }
 
   void OutputPGM(const char* fname, int c, ImageReal cmax)
   {
-    FILE* fp = fopen(fname, "wb");
-    assert(fp != nullptr);
-    fprintf(fp, "P5\n%d %d\n255\n", bitmap.width, bitmap.height);
-    for (int y = 0; y < bitmap.height; ++y) {
-      for (int x = 0; x < bitmap.width; ++x) {
-        unsigned char rgb[1] = {
-            GainCorrect(image_buffer[c][y][x] / cmax),
-        };
-        fwrite(rgb, 1, 1, fp);
+    FILE* fp = {};
+    errno_t err;
+    err = fopen_s(&fp, fname, "wb");
+    if (err == 0) {
+      fprintf(fp, "P5\n%d %d\n255\n", bitmap.width, bitmap.height);
+      for (int y = 0; y < bitmap.height; ++y) {
+        for (int x = 0; x < bitmap.width; ++x) {
+          unsigned char rgb[1] = {
+              GainCorrect(image_buffer[c][y][x] / cmax),
+          };
+          fwrite(rgb, 1, 1, fp);
+        }
       }
+      fclose(fp);
     }
-    fclose(fp);
+    else
+    {
+      printf("The file was not opened\n");
+    }
   }
 
   void DrawBuffer()
@@ -356,7 +369,7 @@ namespace {
       Complex n = c;
       Real r2 = (1.L / target.zoom) * 0.1;
       Real phi = prng(2 * std::numbers::pi);
-      Real r = r2 * exp(-prng(0, 6.9077));
+      Real r = r2 * exp(-prng(6.9077));
       n.c += r * cos(phi);
       n.d += r * sin(phi);
       return n;
@@ -494,4 +507,6 @@ void Test_Buddhabrot()
 {
   BuildInitialSamplePoints();
   RenderBuddhabrotClassic();
+  //imagemagick :
+  //convert color.ppm -normalize -level 0,90% -gamma 0.3 -scale 800x800 nebulabrot.jpg
 }
