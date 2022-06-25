@@ -1,12 +1,39 @@
 
 #include "nebulabrot.hpp"
 
-constexpr auto WIDTH = 500;//1000;
-constexpr auto HEIGHT = 500;//900;
+constexpr auto WIDTH = 1000;//1000;
+constexpr auto HEIGHT = 900;//900;
 
 mxws<uint32_t> RNG;
 
 std::vector<Pixel> pix;
+
+template <typename T>
+std::vector<Pixel> polygonPoints(int vertices, const T& WIDTH, const T& HEIGHT) {
+	std::vector<Pixel> coordinates;
+	int radius = HEIGHT / 2;
+	for (int i = 0; i < vertices; i++)
+	{
+		double angle = (2 * std::numbers::pi) / vertices;
+		double a = (angle * i);
+		int centerX = WIDTH / 2;
+		int centerY = HEIGHT / 2;
+		coordinates.push_back({ int(centerX + radius * sin(a)),int(centerY + radius * cos(a)) });
+	}
+	return coordinates;
+}
+
+template <typename T>
+std::vector<Pixel> setcorners_triangle(const T& WIDTH, const T& HEIGHT) {
+	std::vector<Pixel> pix(3);
+	pix[0].x = WIDTH / 2;
+	pix[0].y = 0;
+	pix[1].x = 0;
+	pix[1].y = HEIGHT;
+	pix[2].x = WIDTH;
+	pix[2].y = HEIGHT;
+	return pix;
+}
 
 template <typename T>
 std::vector<Pixel> setcorners_square(const T& WIDTH, const T& HEIGHT) {
@@ -23,18 +50,12 @@ std::vector<Pixel> setcorners_square(const T& WIDTH, const T& HEIGHT) {
 }
 
 template <typename T>
-std::vector<Pixel> setcorners_triangle(const T& WIDTH, const T& HEIGHT) {
-	std::vector<Pixel> pix(3);
-	pix[0].x = WIDTH / 2;
-	pix[0].y = 0;
-	pix[1].x = 0;
-	pix[1].y = HEIGHT;
-	pix[2].x = WIDTH;
-	pix[2].y = HEIGHT;
-	return pix;
+std::vector<Pixel> setcorners_ngon(const T& vertices, const T& WIDTH, const T& HEIGHT) {
+
+	return polygonPoints(vertices, WIDTH, HEIGHT);
 }
 
-constexpr auto ITER = 100;
+constexpr auto ITER = 1000000;
 
 std::vector<unsigned char> image((WIDTH + 1)* (HEIGHT + 1) * 4);
 template <typename im, typename I, typename col>
@@ -44,12 +65,11 @@ void encodeOneStep(const char* filename, const std::vector<unsigned char>& image
 
 int main(int argc, char* argv[])
 {
-
 	//Buddhabrot buddhabrot(WIDTH, HEIGHT);
 	//buddhabrot.gen_fractal();
 	//encodeOneStep("Buddhabrot.png", buddhabrot.image, WIDTH, HEIGHT);
-  ///Test_Buddhabrot();
-  ///return 0;
+	//Test_Buddhabrot();
+	//return 0;
 
 	Surface surf(WIDTH, HEIGHT);
 	Color color;
@@ -59,28 +79,32 @@ int main(int argc, char* argv[])
 	Pixel last = { WIDTH, HEIGHT };
 	Pixel point = {};
 
-	const bool square = true;
+	const int fractal_select = 2;
 
-	if(square)
-		pix = setcorners_square(WIDTH, HEIGHT);
-	else 
+	if (fractal_select == 0)
 		pix = setcorners_triangle(WIDTH, HEIGHT);
+	else if (fractal_select == 1)
+		pix = setcorners_square(WIDTH, HEIGHT);
+	else if (fractal_select == 2)
+		pix = setcorners_ngon(5, WIDTH, HEIGHT);
 
 	int choice = 0, choice2 = 0;
+
 	for (auto i = 0; i < ITER; i++) {
 
-		//surf.RectFill(point.x, point.y, 1, 1, color);
+		surf.RectFill(point.x, point.y, 1, 1, color);
 		putpixel(image, point.x, point.y, color);
 
-		if (square) {
+		if (fractal_select == 0)
+			choice = RNG(2);
+
+		else  {
 			while (choice2 == choice)
-				choice = RNG(3);
-			choice2 = choice;
+				choice = RNG(int(pix.size() - 1));
 		}
 
-		else 
-			choice = RNG(2);
-	
+		choice2 = choice;
+
 		auto dx = pix[choice].x - last.x;
 		auto dy = pix[choice].y - last.y;
 
@@ -91,7 +115,7 @@ int main(int argc, char* argv[])
 
 	}
 
-	//surf.Save("Chaos_Game.bmp");
+	surf.Save("Chaos_Game.bmp");
 	encodeOneStep("Chaos_Game.png", image, WIDTH, HEIGHT);
 
 	return 0;
