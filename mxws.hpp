@@ -25,7 +25,9 @@ public:
 		x1 = x2 = 1;
 	}
 
-	mxws(const std::seed_seq& seq)
+	template <typename T>
+		requires	std::same_as<T, std::seed_seq>
+	mxws(const T& seq)
 	{
 		if (seq.size() == 2)
 		{
@@ -47,7 +49,9 @@ public:
 		init();
 	}
 
-	mxws(const uint64_t& seed)
+	template <typename T>
+		requires	std::same_as<T, uint64_t>
+	mxws(const T& seed)
 	{
 		init();
 	}
@@ -61,14 +65,16 @@ public:
 		x1 = x2 = 1;
 	}
 
-	void init(const uint64_t& seed)
+	template <typename T>
+		requires	std::same_as<T, uint64_t>
+	void init(const T& seed)
 	{
 		w = seed;
 		x = 1;
 	}
 
 	virtual ~mxws() = default;
-	
+
 	static constexpr RN min() { return std::numeric_limits<RN>::min(); }
 	static constexpr RN max() { return std::numeric_limits<RN>::max(); }
 
@@ -173,7 +179,7 @@ public:
 	template <typename T, typename L>
 		requires std::floating_point<T>&&
 	std::integral<L>
-		T inline error_function(const T& x, const L& iterations)
+		T error_function(const T& x, const L& iterations)
 	{
 		const auto f = [](const auto& t) {return exp(-pow(t, 2)); };
 
@@ -195,7 +201,9 @@ public:
 		return estimate;
 	}
 
-	double erf_inv(double x) {
+	template <typename T>
+		requires std::floating_point<T>
+	T erf_inv(T x) {
 
 		if (x < -1 || x > 1) {
 			return NAN;
@@ -290,6 +298,7 @@ public:
 	}
 
 	template<typename T>
+		requires std::floating_point<T>
 	T inline probit(const T& p)
 	{
 		T root_2 = sqrt(2);
@@ -301,11 +310,11 @@ public:
 	std::same_as<R, double>&&
 		std::integral<I>&&
 		std::same_as<L, std::uint64_t>
-		std::tuple<R, I> inline Probability_Wave(const I& cycle_SIZE,
-			std::vector<I>& cycle, const I& N_cycles, const L& TRIALS) {
+		std::tuple<R, I> inline Probability_Wave(const I& board_SIZE,
+			auto& cycle, const I& N_cycles, const L& TRIALS) {
 
-		const I cycle_size = I(round(log(cycle_SIZE * 6) * pow(tan(36 / 5.), 2)));
-		const I rn_range = I(floor(cycle_SIZE / sqrt(log2(cycle_SIZE))));
+		const I board_size = I(round(log(board_SIZE * 6) * pow(tan(36 / 5.), 2)));
+		const I rn_range = I(floor(board_SIZE / sqrt(log2(board_SIZE))));
 
 		//const I cycle_size = cycle_SIZE;
 		//const I rn_range = I(round(sqrt(cycle_size) + log(cycle_size / 4)));
@@ -314,12 +323,94 @@ public:
 
 		for (L i = 0; i < TRIALS; i++, random_walk = 0)
 		{
-			for (I j = 0; j < cycle_size; j++)
+			for (I j = 0; j < board_size; j++)
 				random_walk += (*this)();
 
-			cycle[to_int(random_walk * rn_range) % cycle_SIZE]++;
+			cycle[to_int(random_walk * rn_range) % board_SIZE]++;
 		}
 
-		return std::make_tuple(rn_range, cycle_size);
+		return std::make_tuple(rn_range, board_size);
+	}
+
+	template <typename T, typename L>
+		requires std::floating_point<T>&& std::integral<L>
+	T sqrt_mc(T z = 2, L throws = 10000000000)
+	{
+
+		uint64_t tel = 0, i = 0;
+		T r;
+
+		if (z < 1) {
+			while (i < throws)
+			{
+				r = (*this)(1.0 / z);
+				r *= r;
+				if (r < z)tel++;
+				i++;
+			}
+			return (1.0 / z) * T(tel) / throws;
+		}
+
+		else {
+			while (i < throws)
+			{
+				r = (*this)(z);
+				r *= r;
+				if (r < z)tel++;
+				i++;
+			}
+			return z * T(tel) / throws;
+		}
+	}
+
+	template <typename T, typename L>
+		requires std::floating_point<T>&& std::integral<L>
+	T exp_mc(T x = 0.9, L n_samples = 10000000000)
+	{
+		if (x == 0) return 1;
+
+		T h = 0;
+		T xi = 1;
+		L tot = 0;
+
+		if (x < -1 || x > 1)
+		{
+			x = std::modf(x, &xi);
+			//The integer part is stored in the object pointed by intpart, 
+			//and the fractional part is returned by the function.
+			xi = std::pow(std::numbers::e, xi);
+		}
+
+		if (x == 0)return xi;
+
+		if (x > 0)
+		{
+			for (auto i = 0; i < n_samples; i++)
+			{
+				while (h < 1)
+				{
+					h += (*this)(1.0 / x);
+					tot++;
+				}
+				h = 0;
+			}
+			return T(tot) / n_samples * xi;
+		}
+
+		else {
+
+			x = std::abs(x);
+			for (auto i = 0; i < n_samples; i++)
+			{
+				while (h < x)
+				{
+					h += (*this)(1.0);
+					tot++;
+				}
+				h = 0;
+			}
+
+			return n_samples / T(tot) * xi;
+		}
 	}
 };
