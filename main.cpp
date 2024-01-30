@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
 	Pixel last = { WIDTH, HEIGHT };
 	Pixel point = {};
 
-	const int fractal_select = 2;
+	const int fractal_select = 3;
 
 	if (fractal_select == 0)
 		pix = setcorners_triangle(WIDTH, HEIGHT);
